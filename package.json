@@ -2,6 +2,7 @@
   "name": "matte-os",
   "version": "1.0.0",
   "dependencies": {
-    "@netlify/blobs": "^8.1.0"
+    "@netlify/blobs": "^8.1.0",
+    "googleapis": "^140.0.0"
   }
 }
