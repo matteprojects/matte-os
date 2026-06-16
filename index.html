@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATTE OS — Max's Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F4;--surface:#FFFFFF;--border:#E8E5E0;--border-light:#F0EDE8;
+  --text:#1A1814;--text-secondary:#6B6560;--text-tertiary:#A8A29C;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+input,select,button{font-family:'DM Sans',sans-serif;font-size:14px}
+input,select{outline:none}
+button{cursor:pointer;border:none;background:none}
+a{text-decoration:none}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin 0.8s linear infinite}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{flex:1;min-width:0;padding:28px 32px;max-width:900px}
+.logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.logo-text{font-size:15px;font-weight:600;letter-spacing:0.02em}
+.logo-sub{font-size:11px;color:var(--text-tertiary);font-family:'DM Mono',monospace}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 20px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all 0.15s;border-right:2px solid transparent}
+.nav-item:hover{color:var(--text);background:#FAF9F7}
+.nav-item.active{color:var(--text);background:#FAF9F7;border-right-color:var(--text)}
+.nav-item i{font-size:15px;width:16px;flex-shrink:0}
+.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
+.nav-badge{font-size:10px;padding:1px 6px;border-radius:10px;margin-left:auto}
+.nav-badge-gray{background:#E8E5E0;color:var(--text-secondary)}
+.nav-badge-red{background:#FCEBEB;color:#A32D2D;font-weight:500}
+.nav-section{padding:16px 20px 6px;font-size:10px;font-weight:500;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase}
+.page-header{margin-bottom:24px}
+.page-date{font-size:12px;color:var(--text-tertiary);margin-bottom:4px;font-family:'DM Mono',monospace}
+.page-greeting{font-size:24px;font-weight:500}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:border-color 0.15s}
+.stat-card:hover{border-color:#C8C4BE}
+.stat-label{font-size:11px;color:var(--text-tertiary);margin-bottom:6px}
+.stat-val{font-size:26px;font-weight:500}
+.section-header{font-size:10px;font-weight:500;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.cal-wrap{margin-bottom:24px}
+.cal-event{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--radius);padding:9px 12px;margin-bottom:5px;position:relative;overflow:hidden;transition:opacity 0.15s}
+.cal-event.now{border-left-color:#378ADD;background:#F5F9FF}
+.cal-event.past{opacity:0.4}
+.cal-event-title{font-size:13px;line-height:1.3;margin-bottom:3px}
+.cal-event-title.now{font-weight:500}
+.cal-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cal-meta span{font-size:11px;color:var(--text-tertiary);display:flex;align-items:center;gap:3px}
+.cal-meta span i{font-size:10px}
+.now-badge{position:absolute;top:8px;right:10px;font-size:9px;padding:2px 6px;background:#378ADD;color:white;border-radius:6px;font-weight:600}
+.cal-progress{position:absolute;bottom:0;left:0;height:2px;background:#378ADD}
+.cal-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-tertiary);padding:10px 0}
+.cal-refresh{font-size:11px;color:var(--text-tertiary);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:3px;padding:0}
+.cal-refresh:hover{color:var(--text-secondary)}
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:24px}
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;cursor:pointer;transition:all 0.15s;border-top-width:2.5px}
+.cat-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.cat-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cat-card-name{font-size:14px;font-weight:500}
+.cat-card-tagline{font-size:11px;color:var(--text-tertiary);margin-bottom:10px;line-height:1.5}
+.cat-card-meta{display:flex;gap:12px;font-size:12px;color:var(--text-secondary)}
+.cat-card-meta strong{color:var(--text);font-weight:500}
+.cat-high{font-weight:500;color:#A32D2D!important}
+.c-blue{border-top-color:#378ADD}.c-coral{border-top-color:#D85A30}.c-green{border-top-color:#639922}
+.c-pink{border-top-color:#D4537E}.c-purple{border-top-color:#7F77DD}.c-amber{border-top-color:#BA7517}
+.task-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border-light)}
+.task-check{width:15px;height:15px;margin-top:2px;border:1px solid var(--border);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.task-check:hover{border-color:#888}
+.task-check.checked{background:currentColor;border-color:currentColor}
+.task-check.checked::after{content:'✓';font-size:9px;color:white}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:13px;line-height:1.4;margin-bottom:3px}
+.task-title.done{text-decoration:line-through;color:var(--text-tertiary)}
+.task-tags{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.tag{font-size:10px;padding:2px 7px;border-radius:10px}
+.tag-pri-high{background:#FCEBEB;color:#A32D2D}
+.tag-pri-med{background:#FAEEDA;color:#854F0B}
+.tag-pri-low{background:#EAF3DE;color:#3B6D11}
+.link-tag{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary)}
+.link-tag i{font-size:11px}
+.task-right{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.due-overdue{font-size:10px;color:#A32D2D;font-weight:500}
+.due-today{font-size:10px;color:#854F0B;font-weight:500}
+.due-normal{font-size:10px;color:var(--text-tertiary)}
+.task-del{color:var(--text-tertiary);display:flex;padding:2px}
+.task-del:hover{color:#A32D2D}
+.proj-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:8px}
+.proj-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer}
+.proj-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.proj-name{font-size:13px;font-weight:500;margin-left:10px}
+.proj-meta{display:flex;align-items:center;gap:8px}
+.proj-count{font-size:11px;color:var(--text-secondary)}
+.proj-high{font-size:11px;color:#A32D2D;font-weight:500}
+.proj-body{border-top:1px solid var(--border-light);padding:8px 14px 12px}
+.add-task-btn{margin-top:8px;font-size:11px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius);border:1px solid;cursor:pointer}
+.inline-form{padding:10px 0;border-bottom:1px solid var(--border-light);display:flex;flex-direction:column;gap:8px}
+.form-input{font-size:13px;padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);width:100%}
+.form-input:focus{border-color:#888}
+.form-row{display:flex;gap:8px;align-items:center}
+.form-select{font-size:12px;padding:4px 8px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.form-date{font-size:12px;padding:4px 8px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.btn-add{font-size:12px;padding:4px 14px;border-radius:var(--radius);border:1px solid;cursor:pointer;font-weight:500}
+.btn-cancel{font-size:12px;padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border);color:var(--text-secondary)}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.filter-btn{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all 0.15s}
+.filter-btn.active{font-weight:500}
+.filter-div{width:1px;background:var(--border);margin:0 2px}
+.back-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text-secondary);margin-bottom:16px;cursor:pointer}
+.back-btn:hover{color:var(--text)}
+.proj-add-row{display:flex;gap:8px;margin-bottom:10px}
+.proj-add-input{flex:1;font-size:13px;padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.view-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.view-icon{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center}
+.view-title{font-size:20px;font-weight:500}
+.view-sub{font-size:11px;color:var(--text-tertiary)}
+.view-actions{display:flex;gap:8px}
+.action-btn{font-size:12px;padding:6px 12px;display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius);border:1px solid;cursor:pointer}
+.empty{font-size:13px;color:var(--text-tertiary);padding:8px 0}
+.completed-toggle{font-size:11px;color:var(--text-tertiary);margin-top:8px;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
+.open-slack{font-size:10px;color:var(--text-tertiary);display:inline-flex;align-items:center;gap:3px}
+.open-slack:hover{color:var(--text-secondary)}
+.si-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid #4A154B;border-radius:var(--radius);margin-bottom:6px;overflow:hidden;transition:opacity 0.25s,max-height 0.25s}
+.si-item.private{border-left-color:#1164A3}
+.si-item.dm{border-left-color:#2BAC76}
+.si-item.dismissing{opacity:0;max-height:0!important;margin-bottom:0}
+.si-header{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;cursor:pointer}
+.si-avatar{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:white;flex-shrink:0}
+.si-from{font-size:12px;font-weight:500;color:var(--text)}
+.si-ch{font-size:10px;padding:1px 6px;border-radius:6px;background:var(--bg);color:var(--text-secondary);font-family:'DM Mono',monospace;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.si-type-tag{font-size:9px;padding:1px 5px;border-radius:5px;font-weight:600;text-transform:uppercase}
+.si-preview{font-size:12px;color:var(--text-secondary);overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;flex:1;min-width:0;margin-top:2px}
+.si-dismiss-x{background:none;border:none;cursor:pointer;color:var(--text-tertiary);font-size:14px;padding:0 0 0 6px;flex-shrink:0}
+.si-dismiss-x:hover{color:#A32D2D}
+.si-body{border-top:1px solid var(--border-light);padding:10px 14px 12px}
+.si-full-text{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px;white-space:pre-wrap}
+.si-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border-light)}
+.si-btn{font-size:11px;padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border);background:none;color:var(--text-secondary);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.si-btn:hover{background:var(--bg);color:var(--text)}
+.si-btn-dismiss:hover{background:#FCEBEB;color:#A32D2D;border-color:#FCEBEB}
+.si-add-task-form{margin-top:10px;display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--border-light)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script>
+const {useState,useEffect,useCallback}=React;
+const e=React.createElement;
+
+async function fetchCalendar(){
+  try{const res=await fetch('/.netlify/functions/calendar');if(!res.ok)return null;const events=await res.json();return Array.isArray(events)&&events.length>0?{events,live:true}:null;}catch{return null;}
+}
+async function fetchSlack(){
+  try{const res=await fetch('/.netlify/functions/slack');if(!res.ok)return null;const msgs=await res.json();return Array.isArray(msgs)&&msgs.length>0?msgs:null;}catch{return null;}
+}
+// Cloud-persisted dismissed Slack messages
+async function fetchDismissed(){
+  try{const res=await fetch('/.netlify/functions/slack-dismissed');if(!res.ok)return[];return await res.json();}catch{return[];}
+}
+async function addDismissed(id){
+  try{await fetch('/.netlify/functions/slack-dismissed',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});}catch{}
+}
+async function clearDismissed(){
+  try{await fetch('/.netlify/functions/slack-dismissed',{method:'DELETE'});}catch{}
+}
+async function markSlackRead(channelId, ts){
+  if(!channelId||!ts)return;
+  try{
+    await fetch('/.netlify/functions/slack-mark',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({channelId,ts})
+    });
+  }catch{}
+}
+async function fetchTasks(){
+  try{const res=await fetch('/.netlify/functions/tasks');if(!res.ok)return null;const t=await res.json();return Array.isArray(t)?t:null;}catch{return null;}
+}
+async function apiCreateTask(task){
+  try{const res=await fetch('/.netlify/functions/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(task)});return res.ok;}catch{return false;}
+}
+async function apiUpdateTask(id,fields){
+  try{const res=await fetch('/.netlify/functions/tasks',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,fields})});return res.ok;}catch{return false;}
+}
+async function apiDeleteTask(id){
+  try{const res=await fetch('/.netlify/functions/tasks',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});return res.ok;}catch{return false;}
+}
+
+const CATS=[
+  {id:'business',label:'Business',icon:'ti-chart-line',tagline:'Macro · Finance · Growth · Recruiting',color:'blue'},
+  {id:'brand',label:'Brand',icon:'ti-bolt',tagline:'Events · Thought Leadership · Experiences',color:'coral'},
+  {id:'newbiz',label:'New Business',icon:'ti-trending-up',tagline:'Pipeline · Pitches · Outreach',color:'green'},
+  {id:'hero',label:'HERO',icon:'ti-building',tagline:'Immersive Venue · ELF · New Space 2026',color:'pink'},
+  {id:'client',label:'Client Work',icon:'ti-briefcase',tagline:'Partner-led projects',color:'purple'},
+  {id:'personal',label:'Personal',icon:'ti-user',tagline:'Family · Personal Brand · CRM',color:'amber'},
+];
+const CC={
+  blue:{bg:'#E6F1FB',accent:'#378ADD',text:'#0C447C',cls:'c-blue'},
+  coral:{bg:'#FAECE7',accent:'#D85A30',text:'#712B13',cls:'c-coral'},
+  green:{bg:'#EAF3DE',accent:'#639922',text:'#27500A',cls:'c-green'},
+  pink:{bg:'#FBEAF0',accent:'#D4537E',text:'#72243E',cls:'c-pink'},
+  purple:{bg:'#EEEDFE',accent:'#7F77DD',text:'#3C3489',cls:'c-purple'},
+  amber:{bg:'#FAEEDA',accent:'#BA7517',text:'#633806',cls:'c-amber'},
+};
+const PRI={high:{label:'High',cls:'tag-pri-high'},medium:{label:'Med',cls:'tag-pri-med'},low:{label:'Low',cls:'tag-pri-low'}};
+const uid=()=>Math.random().toString(36).slice(2,9);
+const todayStr=new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+const hr=new Date().getHours();
+const greeting=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+const todayLabel=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'America/New_York'});
+const EF={title:'',priority:'medium',due:'',url:''};
+const AV_COLORS=['#378ADD','#D85A30','#639922','#D4537E','#7F77DD','#BA7517','#4A154B','#1164A3','#2BAC76'];
+const avColor=n=>AV_COLORS[(n.charCodeAt(0)||0)%AV_COLORS.length];
+const initials=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const TYPE_COLOR={public:'#4A154B',private:'#1164A3',dm:'#2BAC76'};
+const TYPE_LABEL={public:'channel',private:'private',dm:'DM'};
+const toMin=t=>{if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;};
+const S={
+  get:(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}},
+};
+function getLinkType(url){
+  if(!url)return null;
+  if(url.includes('figma.com'))return{icon:'ti-layout',label:'Figma'};
+  if(url.includes('slack.com'))return{icon:'ti-brand-slack',label:'Slack'};
+  if(url.includes('drive.google'))return{icon:'ti-file',label:'Drive'};
+  if(url.includes('airtable'))return{icon:'ti-table',label:'Airtable'};
+  return{icon:'ti-external-link',label:'Link'};
+}
+const SEED_PROJECTS={
+  business:[{id:'b1',name:'Capital Raise Prep'},{id:'b2',name:'Q2 Finance Review'},{id:'b3',name:'Recruiting Pipeline'},{id:'b4',name:'Ops Strategy'}],
+  brand:[{id:'br1',name:'Events Calendar'},{id:'br2',name:'Thought Leadership Program'},{id:'br3',name:'Merch Drop'}],
+  newbiz:[{id:'nb1',name:'Active Pitches'},{id:'nb2',name:'Outbound Pipeline'}],
+  hero:[{id:'h1',name:'ELF x Warner Bros.'},{id:'h2',name:'New Space 2026'},{id:'h3',name:'HERO [OPS]'}],
+  client:[{id:'cl1',name:'Apple RFQ — Global Launch 2026'}],
+  personal:[{id:'p1',name:'Personal CRM'},{id:'p2',name:'Family'}],
+};
+const SEED_TASKS=[
+  {id:'t_elf1',title:'[Respond to Marcel] ELF Staffing Plan',priority:'high',due:'',url:'',catId:'hero',projectId:'h1',done:false},
+  {id:'t_elf2',title:'ELF Partnerships Deck [track progress]',priority:'medium',due:'',url:'https://www.figma.com/slides/6l1dsAnX6gpniWZw3cmsCi/ELF-PARTNERSHIPS?node-id=107-',catId:'hero',projectId:'h1',done:false},
+  {id:'t_elf3',title:'Respond to Marcel — ELF F&B Workshop',priority:'high',due:'',url:'',catId:'hero',projectId:'h1',done:false},
+  {id:'t_hop1',title:'[Respond to LJ] re: Listening Experience on April 20',priority:'medium',due:'',url:'',catId:'hero',projectId:'h3',done:false},
+  {id:'t_hop2',title:'[For Phil] deck repository',priority:'medium',due:'',url:'http://figma.com/slides/QicCzQ8AsNGVRAXA9i7pWr/HERO_VenueOverview_25',catId:'hero',projectId:'h3',done:false},
+  {id:'t_hop3',title:'Camilla replacement [!!!]',priority:'high',due:'',url:'',catId:'hero',projectId:'h3',done:false},
+  {id:'t_hop4',title:'HERO investor deck [track]',priority:'high',due:'',url:'https://www.figma.com/slides/6XX25oadmQaCVqytNqRZcU/HERO-INVESTOR-DECK-R1',catId:'hero',projectId:'h3',done:false},
+  {id:'t_hop5',title:'DOH updates [track]',priority:'medium',due:'',url:'',catId:'hero',projectId:'h3',done:false},
+  {id:'t_hop6',title:'Follow up w/ Mel — Box Office Needs',priority:'medium',due:'',url:'',catId:'hero',projectId:'h3',done:false},
+  {id:'t_apple1',title:'Review NYC venues (lines 19-20, purple) in venue sheet',priority:'high',due:'',url:'https://matteteam.slack.com/archives/C0B3RRL5D44/p1779925921692369',catId:'client',projectId:'cl1',done:false},
+  {id:'t_apple2',title:'Feed back on NYC venues — Academy Mansion, Prince George, Edison Ballroom',priority:'high',due:'',url:'https://matteteam.slack.com/archives/C0B3RRL5D44/p1779831199287879',catId:'client',projectId:'cl1',done:false},
+  {id:'t_apple3',title:'Rate card gut check — VP Client Services $365 vs $207 Apple max',priority:'high',due:'',url:'https://matteteam.slack.com/archives/C0B3RRL5D44/p1779591644647849',catId:'client',projectId:'cl1',done:false},
+  {id:'t_fam1',title:'Book LaserBar',priority:'low',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam2',title:'Balance for old renters — utilities and deposit',priority:'medium',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam3',title:'Ensure Property Tax Adjustment on SPS',priority:'high',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam4',title:'Buy return flight to Paris for wedding (May 27-31)',priority:'high',due:'2026-05-28',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam5',title:'Fix Solar Panel reporting WIFI',priority:'medium',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam6',title:'Schedule SolarWorks to come',priority:'medium',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam7',title:'Clean the coffee table',priority:'low',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam8',title:'New lighting fixtures',priority:'low',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam9',title:'Finalize colors and finish',priority:'medium',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam10',title:'Stripping paint',priority:'low',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_fam11',title:'Prints of family photos',priority:'low',due:'',url:'',catId:'personal',projectId:'p2',done:false},
+  {id:'t_nb1',title:'[Respond to David?] MATTE x Mundial',priority:'high',due:'',url:'',catId:'newbiz',projectId:null,done:false},
+  {id:'t_br1',title:'Confirm headshot & bio — XP Land 2025 list',priority:'medium',due:'',url:'',catId:'brand',projectId:null,done:false},
+  {id:'t_cl1',title:"[Tracking] AK's secret project",priority:'medium',due:'',url:'',catId:'client',projectId:null,done:false},
+  {id:'t_biz1',title:'Open roles review: Sr Designer x2, Designer, Design Director, Sr Art Director, ACD',priority:'high',due:'',url:'https://matteteam.slack.com/archives/C07SZQ7D28M/p1779817766409449',catId:'business',projectId:'b3',done:false},
+];
+const SEED_SLACK=[
+  {id:'sl1',from:'Thad Somoza',channel:'#nb-apple-rfq',type:'public',text:'Lines 19-20 in venue sheet — purple NYC venues ready for your review tonight. Academy Mansion is the frontrunner but Prince George and Edison Ballroom are also strong.',time:'Yesterday 7:52pm',url:'https://matteteam.slack.com/archives/C0B3RRL5D44/p1779925921692369'},
+  {id:'sl2',from:'Kelly Capuano',channel:'Group DM',type:'dm',text:"FYI couldn't find FNT but put in our other Owned IP stuff — MATTE for PPL deck. Also flagging the rate card issue on Apple — VP Client Services is at $365/hr but Apple's max is $207/hr.",time:'Yesterday 4:55pm',url:'https://matteteam.slack.com/archives/C0B678N3M53/p1779915306118029'},
+  {id:'sl3',from:'Evelyn Ng',channel:'#mercury-spend-campaign',type:'private',text:"Went out to Prettybird's rep to officially invite him to bid. Shoot him a text to get him hyped — director options due back Friday EOD.",time:'Yesterday 4:50pm',url:'https://matteteam.slack.com/archives/C0B0R9KP9DZ/p1779915048127829'},
+  {id:'sl4',from:'Grace Farmer',channel:'#nb-apple-rfq',type:'public',text:'NYPL has three other private event rooms we could book in addition to the Rose Main Reading Room. Capacity goes from 200 to ~600.',time:'Yesterday 2:58pm',url:'https://matteteam.slack.com/archives/C0B3RRL5D44/p1779908327895139'},
+  {id:'sl5',from:'Andre Brown',channel:'#replit-vibecon-2026',type:'public',text:'Brain dump — Sound Room has no speakers in budget (need solve ASAP), Merch needs a deck page, Print audit is overdue. @maxpollack flagged for sound outreach.',time:'Yesterday 8:48pm',url:'https://matteteam.slack.com/archives/C09UXP8CB5F/p1779842907358009'},
+  {id:'sl6',from:'Mark Albini',channel:'#marcjacobs-studio-build',type:'private',text:"If you're in tomorrow and available, I'll pop by to TB. Fabrication quote came in ~40% over budget.",time:'Yesterday 8:04pm',url:'https://matteteam.slack.com/archives/C0AA6FP5PP1/p1779840272576249'},
+  {id:'sl7',from:'Michael Page',channel:'Group DM (Ann Kim)',type:'dm',text:"Spike/Amjad narrative — want to get to clients by EOW. Also need to confirm wheatpasting OOH rotation.",time:'Yesterday 10:35am',url:'https://matteteam.slack.com/archives/C0AQ091T1TJ/p1779806133342399'},
+  {id:'sl8',from:'Laura Marcucci',channel:'Group DM (Laura, Neda)',type:'dm',text:'Open roles needing your sign-off: Sr Designer x2, Sr Designer CDMX, Designer, Design Director, Sr Art Director, ACD.',time:'Yesterday 1:49pm',url:'https://matteteam.slack.com/archives/C07SZQ7D28M/p1779817766409449'},
+  {id:'sl9',from:'Luke Simmons',channel:'#replit-vibecon-expdesign',type:'public',text:'Sound Room — still no speakers in budget after three vendor passes. @maxpollack doing outreach for potential solves.',time:'Today 2:27pm',url:'https://matteteam.slack.com/archives/C0AMP79CYNN/p1779820055628389'},
+  {id:'sl10',from:'Kelly Capuano',channel:'#nb-apple-rfq',type:'public',text:'Rate card gut check — VP Client Services at $365/hr, Apple max is $207/hr. Restructure team or negotiate rate? Need direction before we finalize the SOW.',time:'Fri 11:00pm',url:'https://matteteam.slack.com/archives/C0B3RRL5D44/p1779591644647849'},
+];
+
+function SlackItem({msg,onDismiss,onAddTask}){
+  const [expanded,setExpanded]=useState(false);
+  const [dismissing,setDismissing]=useState(false);
+  const [addingTask,setAddingTask]=useState(false);
+  const [taskTitle,setTaskTitle]=useState('');
+  const [taskCat,setTaskCat]=useState('hero');
+  const [taskPri,setTaskPri]=useState('medium');
+  const doDismiss=(ev)=>{ev&&ev.stopPropagation();setDismissing(true);setTimeout(()=>onDismiss(msg.id),280);};
+  const doAddTask=()=>{if(!taskTitle.trim())return;onAddTask({title:taskTitle.trim(),catId:taskCat,priority:taskPri,url:msg.url||''});setTaskTitle('');setAddingTask(false);};
+  const tc=TYPE_COLOR[msg.type]||TYPE_COLOR.public;
+  return e('div',{className:'si-item '+(msg.type||'public')+(dismissing?' dismissing':'')},
+    e('div',{className:'si-header',onClick:()=>setExpanded(x=>!x)},
+      e('div',{className:'si-avatar',style:{background:avColor(msg.from)}},initials(msg.from)),
+      e('div',{style:{flex:1,minWidth:0}},
+        e('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:2}},
+          e('span',{className:'si-from'},msg.from),
+          e('span',{className:'si-ch'},msg.channel),
+          e('span',{className:'si-type-tag',style:{background:tc+'18',color:tc}},TYPE_LABEL[msg.type]||'channel')
+        ),
+        e('div',{className:'si-preview'},msg.text)
+      ),
+      e('div',{style:{display:'flex',alignItems:'center',gap:4,marginLeft:8,flexShrink:0}},
+        msg.time&&e('span',{style:{fontSize:10,color:'var(--text-tertiary)',whiteSpace:'nowrap'}},msg.time),
+        e('button',{style:{background:'none',border:'none',cursor:'pointer',color:'var(--text-tertiary)',fontSize:13,padding:'0 2px'},onClick:ev=>{ev.stopPropagation();setExpanded(x=>!x)}},e('i',{className:'ti ti-chevron-'+(expanded?'up':'down')})),
+        e('button',{className:'si-dismiss-x',onClick:doDismiss},e('i',{className:'ti ti-x'}))
+      )
+    ),
+    expanded&&e('div',{className:'si-body'},
+      e('div',{className:'si-full-text'},msg.text),
+      e('div',{className:'si-actions'},
+        msg.url&&e('a',{href:msg.url,target:'_blank',rel:'noopener noreferrer',className:'open-slack',style:{fontSize:11}},e('i',{className:'ti ti-brand-slack',style:{fontSize:12}}),'Open in Slack',e('i',{className:'ti ti-external-link',style:{fontSize:10}})),
+        !addingTask&&e('button',{className:'si-btn',onClick:ev=>{ev.stopPropagation();setAddingTask(true);setTaskTitle('');}},e('i',{className:'ti ti-plus',style:{fontSize:11}}),'Create task'),
+        !addingTask&&e('button',{className:'si-btn si-btn-dismiss',onClick:doDismiss},e('i',{className:'ti ti-check',style:{fontSize:11}}),'Done, dismiss')
+      ),
+      addingTask&&e('div',{className:'si-add-task-form',onClick:ev=>ev.stopPropagation()},
+        e('input',{className:'form-input',autoFocus:true,value:taskTitle,placeholder:'Task title...',onChange:ev=>setTaskTitle(ev.target.value),onKeyDown:ev=>{if(ev.key==='Enter')doAddTask();if(ev.key==='Escape')setAddingTask(false);}}),
+        e('div',{className:'form-row'},
+          e('select',{className:'form-select',value:taskCat,onChange:ev=>setTaskCat(ev.target.value)},CATS.map(c=>e('option',{key:c.id,value:c.id},c.label))),
+          e('select',{className:'form-select',value:taskPri,onChange:ev=>setTaskPri(ev.target.value)},e('option',{value:'high'},'High'),e('option',{value:'medium'},'Medium'),e('option',{value:'low'},'Low')),
+          e('div',{style:{flex:1}}),
+          e('button',{className:'btn-add',style:{background:'#E6F1FB',borderColor:'#378ADD',color:'#0C447C'},onClick:doAddTask},'Add task'),
+          e('button',{className:'btn-cancel',onClick:()=>setAddingTask(false)},'Cancel')
+        )
+      )
+    )
+  );
+}
+
+function TaskRow({task,showCat,projects,onToggle,onDelete}){
+  const tcat=CATS.find(c=>c.id===task.catId);
+  const tc=tcat?CC[tcat.color]:CC.blue;
+  const proj=task.projectId&&projects[task.catId]?projects[task.catId].find(p=>p.id===task.projectId):null;
+  const pri=PRI[task.priority]||PRI.medium;
+  const isOverdue=task.due&&task.due<todayStr&&!task.done;
+  const isDueToday=task.due===todayStr&&!task.done;
+  const link=getLinkType(task.url);
+  return e('div',{className:'task-row'},
+    e('div',{className:'task-check'+(task.done?' checked':''),style:{color:tc.accent,borderColor:task.done?tc.accent:''},onClick:()=>onToggle(task.id)}),
+    e('div',{className:'task-body'},
+      e('div',{className:'task-title'+(task.done?' done':'')},task.title),
+      e('div',{className:'task-tags'},
+        showCat&&tcat&&e('span',{className:'tag',style:{background:tc.bg,color:tc.text}},tcat.label),
+        showCat&&proj&&e('span',{className:'tag',style:{background:'#F5F4F2',color:'#6B6560'}},proj.name),
+        link&&task.url&&e('a',{href:task.url,target:'_blank',rel:'noopener noreferrer',className:'tag link-tag'},e('i',{className:'ti '+link.icon}),link.label)
+      )
+    ),
+    e('div',{className:'task-right'},
+      e('span',{className:'tag '+pri.cls},pri.label),
+      task.due&&e('span',{className:isOverdue?'due-overdue':isDueToday?'due-today':'due-normal'},isDueToday?'Today':task.due),
+      e('button',{className:'task-del',onClick:()=>onDelete(task.id)},e('i',{className:'ti ti-x',style:{fontSize:13}}))
+    )
+  );
+}
+
+function InlineForm({catId,form,setForm,onSave,onCancel}){
+  const tc=CC[CATS.find(c=>c.id===catId)?.color]||CC.blue;
+  return e('div',{className:'inline-form'},
+    e('input',{className:'form-input',autoFocus:true,value:form.title,placeholder:'Task title...',onChange:ev=>setForm(f=>({...f,title:ev.target.value})),onKeyDown:ev=>{if(ev.key==='Enter')onSave();if(ev.key==='Escape')onCancel();}}),
+    e('input',{className:'form-input',value:form.url,placeholder:'Link — Figma, Slack, Drive...',onChange:ev=>setForm(f=>({...f,url:ev.target.value}))}),
+    e('div',{className:'form-row'},
+      e('select',{className:'form-select',value:form.priority,onChange:ev=>setForm(f=>({...f,priority:ev.target.value}))},e('option',{value:'high'},'High'),e('option',{value:'medium'},'Medium'),e('option',{value:'low'},'Low')),
+      e('input',{type:'date',className:'form-date',value:form.due,onChange:ev=>setForm(f=>({...f,due:ev.target.value}))}),
+      e('div',{style:{flex:1}}),
+      e('button',{className:'btn-add',style:{background:tc.bg,borderColor:tc.accent,color:tc.text},onClick:onSave},'Add'),
+      e('button',{className:'btn-cancel',onClick:onCancel},'Cancel')
+    )
+  );
+}
+
+function Sidebar({view,setView,setCatId,tasks,slackCount}){
+  const open=tasks.filter(t=>!t.done).length;
+  return e('div',{className:'sidebar'},
+    e('div',{className:'logo'},e('div',{className:'logo-text'},'MATTE OS'),e('div',{className:'logo-sub'},'Max Pollack')),
+    e('div',{className:'nav-item'+(view==='overview'?' active':''),onClick:()=>setView('overview')},e('i',{className:'ti ti-layout-dashboard'}),'Overview'),
+    e('div',{className:'nav-item'+(view==='all'?' active':''),onClick:()=>setView('all')},e('i',{className:'ti ti-checks'}),'All tasks',open>0&&e('span',{className:'nav-badge nav-badge-gray'},open)),
+    e('div',{className:'nav-item'+(view==='slack'?' active':''),onClick:()=>setView('slack')},e('i',{className:'ti ti-brand-slack'}),'Slack inbox',slackCount>0&&e('span',{className:'nav-badge nav-badge-red'},slackCount)),
+    e('div',{className:'nav-section'},'Categories'),
+    CATS.map(cat=>{
+      const hp=tasks.filter(t=>t.catId===cat.id&&!t.done&&t.priority==='high').length;
+      return e('div',{key:cat.id,className:'nav-item'+(view==='cat'?' active':''),onClick:()=>{setCatId(cat.id);setView('cat');}},
+        e('i',{className:'ti '+cat.icon}),cat.label,hp>0&&e('div',{className:'nav-dot',style:{background:'#D85A30',marginLeft:'auto'}}));
+    })
+  );
+}
+
+function App(){
+  const [view,setView]=useState('overview');
+  const [catId,setCatId]=useState(null);
+  const [projects,setProjRaw]=useState(()=>S.get('matte_projects')||SEED_PROJECTS);
+  const [tasks,setTasksRaw]=useState(SEED_TASKS);
+  const [tasksReady,setTasksReady]=useState(false);
+  const [syncMsg,setSyncMsg]=useState(null);
+  const [slackMsgs,setSlackMsgs]=useState(SEED_SLACK.map(m=>({...m,dismissed:false})));
+  const [slackLive,setSlackLive]=useState(false);
+  const [slackLoading,setSlackLoading]=useState(true);
+  const [dismissedIds,setDismissedIds]=useState([]);
+  const [calState,setCalState]=useState({events:[],live:false,loading:true});
+  const [projExpanded,setProjExpanded]=useState({});
+  const [addingTask,setAddingTask]=useState(null);
+  const [form,setForm]=useState(EF);
+  const [addingProj,setAddingProj]=useState(false);
+  const [projName,setProjName]=useState('');
+  const [showDone,setShowDone]=useState({});
+  const [allMode,setAllMode]=useState('all');
+
+  const setProjects=p=>{setProjRaw(p);S.set('matte_projects',p);};
+
+  // Load tasks from Netlify Blobs on mount — shared across all users
+  const loadTasks=useCallback(async()=>{
+    const remote=await fetchTasks();
+    if(remote&&remote.length>0){
+      setTasksRaw(remote);
+    } else if(remote&&remote.length===0){
+      // Blobs empty — seed all tasks
+      setSyncMsg('Seeding tasks...');
+      for(const t of SEED_TASKS){await apiCreateTask({...t,created:Date.now()});}
+      const seeded=await fetchTasks();
+      if(seeded)setTasksRaw(seeded);
+      setSyncMsg(null);
+    }
+    setTasksReady(true);
+  },[]);
+
+  const addSharedTask=async(task)=>{
+    const nt={...task,id:uid(),created:Date.now()};
+    setTasksRaw(ts=>[...ts,nt]);
+    setSyncMsg('Saving...');
+    const ok=await apiCreateTask(nt);
+    setSyncMsg(ok?null:'Sync error');
+    if(!ok)setTimeout(()=>setSyncMsg(null),3000);
+    // Refresh to confirm
+    const remote=await fetchTasks();
+    if(remote)setTasksRaw(remote);
+  };
+
+  const toggleSharedTask=async(id)=>{
+    const task=tasks.find(t=>t.id===id);
+    if(!task)return;
+    const newDone=!task.done;
+    setTasksRaw(ts=>ts.map(t=>t.id===id?{...t,done:newDone}:t));
+    await apiUpdateTask(id,{done:newDone});
+  };
+
+  const deleteSharedTask=async(id)=>{
+    setTasksRaw(ts=>ts.filter(t=>t.id!==id));
+    await apiDeleteTask(id);
+  };
+
+  const loadCalendar=useCallback(async()=>{setCalState(s=>({...s,loading:true}));const r=await fetchCalendar();setCalState(r?{events:r.events,live:true,loading:false}:{events:[],live:false,loading:false});},[]);
+  const loadSlack=useCallback(async()=>{
+    setSlackLoading(true);
+    const [r,dis]=await Promise.all([fetchSlack(),fetchDismissed()]);
+    const disIds=Array.isArray(dis)?dis:[];
+    setDismissedIds(disIds);
+    if(r){
+      setSlackMsgs(r.map((m,i)=>({...m,id:m.id||('lv'+i),dismissed:disIds.includes(m.id||('lv'+i))})));
+      setSlackLive(true);
+    } else {
+      setSlackMsgs(SEED_SLACK.map(m=>({...m,dismissed:disIds.includes(m.id)})));
+    }
+    setSlackLoading(false);
+  },[]);
+
+  useEffect(()=>{loadTasks();loadCalendar();loadSlack();},[]);
+
+  const dismissSlack=id=>{
+    const msg=slackMsgs.find(m=>m.id===id);
+    setSlackMsgs(ms=>ms.map(m=>m.id===id?{...m,dismissed:true}:m));
+    setDismissedIds(ds=>[...ds,id]);
+    addDismissed(id); // save to cloud — persists across all devices
+    if(msg&&msg.channelId&&msg.ts)markSlackRead(msg.channelId,msg.ts);
+  };
+  const addTaskFromSlack=({title,catId,priority,url})=>addSharedTask({title,priority,due:'',url,catId,projectId:null,done:false});
+  const saveTask=(cId,projId)=>{if(!form.title.trim())return;addSharedTask({title:form.title.trim(),priority:form.priority,due:form.due,url:form.url.trim(),catId:cId,projectId:projId==='cat'?null:projId,done:false});setForm(EF);setAddingTask(null);};
+  const toggleTask=id=>toggleSharedTask(id);
+  const deleteTask=id=>deleteSharedTask(id);
+  const saveProj=()=>{if(!projName.trim())return;const np={...projects,[catId]:[...(projects[catId]||[]),{id:uid(),name:projName.trim()}]};setProjects(np);setProjName('');setAddingProj(false);};
+
+  const activeSlack=slackMsgs.filter(m=>!m.dismissed);
+  const nowMin=new Date().getHours()*60+new Date().getMinutes();
+  const {events,live,loading}=calState;
+  const SyncBar=()=>syncMsg?e('div',{style:{background:'#EAF3DE',border:'1px solid #639922',borderRadius:'var(--radius)',padding:'6px 14px',marginBottom:12,fontSize:12,color:'#27500A',display:'flex',alignItems:'center',gap:6}},e('i',{className:'ti ti-loader spin',style:{fontSize:12}}),syncMsg):null;
+
+  if(view==='slack'){
+    return e('div',{className:'shell'},
+      e(Sidebar,{view,setView,setCatId,tasks,slackCount:activeSlack.length}),
+      e('div',{className:'main'},
+        e('div',{className:'page-header'},
+          e('div',{className:'page-date'},todayLabel),
+          e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center'}},
+            e('div',{style:{fontSize:22,fontWeight:500}},'Slack inbox'),
+            e('div',{style:{display:'flex',gap:12,alignItems:'center'}},
+              e('span',{style:{fontSize:12,color:'var(--text-tertiary)'}},activeSlack.length+' unread · '+(slackLive?'live':'cached')),
+              e('button',{className:'cal-refresh',onClick:loadSlack},e('i',{className:'ti ti-refresh'+(slackLoading?' spin':''),style:{fontSize:12}}),' Refresh'),
+              e('a',{href:'https://matteteam.slack.com',target:'_blank',rel:'noopener noreferrer',className:'open-slack'},'Open Slack',e('i',{className:'ti ti-external-link',style:{fontSize:10}}))
+            )
+          )
+        ),
+        slackLoading&&e('div',{className:'cal-loading'},e('i',{className:'ti ti-loader spin',style:{fontSize:14}}),' Loading Slack mentions...'),
+        !slackLoading&&activeSlack.length===0&&e('div',{style:{textAlign:'center',padding:'60px 0',color:'var(--text-tertiary)'}},e('i',{className:'ti ti-checks',style:{fontSize:40,display:'block',marginBottom:12}}),e('div',{style:{fontSize:15,fontWeight:500,marginBottom:4}},'All caught up'),e('div',{style:{fontSize:12}},'No unread Slack mentions')),
+        !slackLoading&&activeSlack.map(m=>e(SlackItem,{key:m.id,msg:m,onDismiss:dismissSlack,onAddTask:addTaskFromSlack})),
+        !slackLoading&&slackMsgs.filter(m=>m.dismissed).length>0&&e('div',{style:{marginTop:16,paddingTop:12,borderTop:'1px solid var(--border-light)',display:'flex',alignItems:'center',gap:10}},
+          e('span',{style:{fontSize:11,color:'var(--text-tertiary)'}},slackMsgs.filter(m=>m.dismissed).length+' dismissed'),
+          e('button',{style:{fontSize:11,color:'var(--text-tertiary)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline'},onClick:()=>{setSlackMsgs(ms=>ms.map(m=>({...m,dismissed:false})));setDismissedIds([]);clearDismissed();}}, 'Restore all')
+        )
+      )
+    );
+  }
+
+  if(view==='all'){
+    const open=tasks.filter(t=>!t.done);
+    const filt=allMode==='today'?open.filter(t=>t.due===todayStr):allMode==='high'?open.filter(t=>t.priority==='high'):allMode==='all'?open:open.filter(t=>t.catId===allMode);
+    const sorted=[...filt.filter(t=>t.priority==='high'),...filt.filter(t=>t.priority==='medium'),...filt.filter(t=>t.priority==='low')];
+    const modeLabel={all:'All open tasks',today:'Due today',high:'High priority'}[allMode]||(CATS.find(c=>c.id===allMode)?.label||'');
+    return e('div',{className:'shell'},
+      e(Sidebar,{view,setView,setCatId,tasks,slackCount:activeSlack.length}),
+      e('div',{className:'main'},
+        e(SyncBar),e('div',{className:'back-btn',onClick:()=>setView('overview')},e('i',{className:'ti ti-arrow-left',style:{fontSize:13}}),' Overview'),
+        e('div',{className:'page-header'},e('div',{className:'page-date'},todayLabel),e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'baseline'}},e('div',{style:{fontSize:20,fontWeight:500}},modeLabel),e('span',{style:{fontSize:13,color:'var(--text-tertiary)'}},sorted.length+' tasks'))),
+        e('div',{className:'filter-row'},
+          ...[['all','All',open.length,'#1A1814','#F7F6F4'],['today','Due today',open.filter(t=>t.due===todayStr).length,'#854F0B','#FAEEDA'],['high','High priority',open.filter(t=>t.priority==='high').length,'#A32D2D','#FCEBEB']].map(([m,l,cnt,col,bg])=>
+            e('button',{key:m,className:'filter-btn'+(allMode===m?' active':''),style:allMode===m?{background:bg,borderColor:col,color:col}:{},onClick:()=>setAllMode(m)},l+' ('+cnt+')')),
+          e('div',{className:'filter-div'}),
+          ...CATS.map(cat=>{const cnt=open.filter(t=>t.catId===cat.id).length;if(!cnt)return null;const tc=CC[cat.color];return e('button',{key:cat.id,className:'filter-btn'+(allMode===cat.id?' active':''),style:allMode===cat.id?{background:tc.bg,borderColor:tc.accent,color:tc.text}:{},onClick:()=>setAllMode(cat.id)},cat.label+' ('+cnt+')');})
+        ),
+        sorted.length===0?e('div',{className:'empty'},'Nothing here — clear!'):sorted.map(t=>e(TaskRow,{key:t.id,task:t,showCat:true,projects,onToggle:toggleTask,onDelete:deleteTask}))
+      )
+    );
+  }
+
+  if(view==='overview'){
+    const open=tasks.filter(t=>!t.done);
+    return e('div',{className:'shell'},
+      e(Sidebar,{view,setView,setCatId,tasks,slackCount:activeSlack.length}),
+      e('div',{className:'main'},
+        e(SyncBar),e('div',{className:'page-header'},e('div',{className:'page-date'},todayLabel),e('div',{className:'page-greeting'},greeting+', Max.')),
+        e('div',{className:'stats-grid'},[{l:'Open tasks',v:open.length,m:'all'},{l:'Due today',v:open.filter(t=>t.due===todayStr).length,m:'today'},{l:'High priority',v:open.filter(t=>t.priority==='high').length,m:'high'}].map(({l,v,m})=>e('div',{key:l,className:'stat-card',onClick:()=>{setAllMode(m);setView('all');}},e('div',{className:'stat-label'},l),e('div',{className:'stat-val'},v)))),
+        e('div',{className:'cal-wrap'},
+          e('div',{className:'section-header'},e('span',null,"Today's schedule"+(loading?' ...':live?' · live':' · cached')),e('button',{className:'cal-refresh',onClick:loadCalendar},e('i',{className:'ti ti-refresh'+(loading?' spin':''),style:{fontSize:12}}),' Refresh')),
+          loading&&e('div',{className:'cal-loading'},e('i',{className:'ti ti-loader spin',style:{fontSize:14}}),' Loading from Google Calendar...'),
+          !loading&&events.length===0&&e('div',{className:'empty'},'No events today.'),
+          !loading&&events.map((ev,i)=>{
+            const sm=toMin(ev.start),em=toMin(ev.end);
+            const isNow=sm!=null&&em!=null&&nowMin>=sm&&nowMin<=em;
+            const isPast=em!=null&&nowMin>em;
+            const prog=isNow?Math.min(100,Math.round(((nowMin-sm)/(em-sm))*100)):0;
+            return e('div',{key:i,className:'cal-event'+(isNow?' now':'')+(isPast?' past':'')},
+              isNow&&e('div',{className:'cal-progress',style:{width:prog+'%'}}),
+              e('div',{className:'cal-event-title'+(isNow?' now':'')},ev.title),
+              e('div',{className:'cal-meta'},e('span',null,ev.start+(ev.end?' – '+ev.end:'')),ev.location&&e('span',null,e('i',{className:'ti ti-map-pin'}),ev.location),ev.attendees>1&&e('span',null,e('i',{className:'ti ti-users'}),ev.attendees)),
+              isNow&&e('div',{className:'now-badge'},'NOW')
+            );
+          })
+        ),
+        e('div',{className:'section-header'},'Categories'),
+        e('div',{className:'cat-grid'},CATS.map(cat=>{
+          const tc=CC[cat.color];const ct=tasks.filter(t=>t.catId===cat.id&&!t.done);const cp=(projects[cat.id]||[]).length;const hp=ct.filter(t=>t.priority==='high').length;
+          return e('div',{key:cat.id,className:'cat-card '+tc.cls,onClick:()=>{setCatId(cat.id);setView('cat');setAddingTask(null);setAddingProj(false);}},
+            e('div',{className:'cat-card-header'},e('div',{className:'cat-card-name'},cat.label),e('i',{className:'ti '+cat.icon,style:{fontSize:16,color:tc.accent}})),
+            e('div',{className:'cat-card-tagline'},cat.tagline),
+            e('div',{className:'cat-card-meta'},e('span',null,e('strong',null,cp),' projects'),e('span',null,e('strong',null,ct.length),' open'),hp>0&&e('span',{className:'cat-high'},hp+' high'))
+          );
+        })),
+        activeSlack.length>0&&e('div',null,
+          e('div',{className:'section-header'},e('span',null,'Slack inbox'),e('button',{style:{fontSize:11,color:'#378ADD',background:'none',border:'none',cursor:'pointer',fontWeight:500},onClick:()=>setView('slack')},'See all '+activeSlack.length+' →')),
+          activeSlack.slice(0,3).map(m=>e(SlackItem,{key:m.id,msg:m,onDismiss:dismissSlack,onAddTask:addTaskFromSlack}))
+        )
+      )
+    );
+  }
+
+  const cat=CATS.find(c=>c.id===catId);
+  const tc=CC[cat.color];
+  const catProjs=projects[catId]||[];
+  const allCatTasks=tasks.filter(t=>t.catId===catId);
+  const catLevelTasks=allCatTasks.filter(t=>!t.projectId);
+  const openCat=catLevelTasks.filter(t=>!t.done);
+  const doneCat=catLevelTasks.filter(t=>t.done);
+
+  return e('div',{className:'shell'},
+    e(Sidebar,{view,setView,setCatId,tasks,slackCount:activeSlack.length}),
+    e('div',{className:'main'},
+      e('div',{className:'back-btn',onClick:()=>{setView('overview');setAddingTask(null);setAddingProj(false);}},e('i',{className:'ti ti-arrow-left',style:{fontSize:13}}),' All categories'),
+      e('div',{className:'view-header'},
+        e('div',{style:{display:'flex',alignItems:'center',gap:10}},e('div',{className:'view-icon',style:{background:tc.bg}},e('i',{className:'ti '+cat.icon,style:{fontSize:18,color:tc.accent}})),e('div',null,e('div',{className:'view-title'},cat.label),e('div',{className:'view-sub'},cat.tagline))),
+        e('div',{className:'view-actions'},
+          e('button',{className:'action-btn',style:{background:tc.bg,borderColor:tc.accent,color:tc.text},onClick:()=>{setAddingTask('cat');setForm(EF);}},e('i',{className:'ti ti-plus',style:{fontSize:13}}),' Task'),
+          e('button',{className:'action-btn',style:{borderColor:'var(--border)',color:'var(--text)'},onClick:()=>setAddingProj(true)},e('i',{className:'ti ti-folder-plus',style:{fontSize:13}}),' Project')
+        )
+      ),
+      e('div',{className:'stats-grid',style:{marginBottom:20}},[['Projects',catProjs.length],['Open tasks',allCatTasks.filter(t=>!t.done).length],['High priority',allCatTasks.filter(t=>!t.done&&t.priority==='high').length]].map(([l,v])=>e('div',{key:l,className:'stat-card'},e('div',{className:'stat-label'},l),e('div',{className:'stat-val'},v)))),
+      (openCat.length>0||doneCat.length>0||addingTask==='cat')&&e('div',{style:{marginBottom:20}},
+        e('div',{className:'section-header'},'Category tasks'),
+        openCat.map(t=>e(TaskRow,{key:t.id,task:t,showCat:false,projects,onToggle:toggleTask,onDelete:deleteTask})),
+        addingTask==='cat'&&e(InlineForm,{catId,form,setForm,onSave:()=>saveTask(catId,'cat'),onCancel:()=>{setAddingTask(null);setForm(EF);}}),
+        doneCat.length>0&&e('div',null,
+          e('div',{className:'completed-toggle',onClick:()=>setShowDone(s=>({...s,cat:!s.cat}))},e('i',{className:'ti ti-chevron-'+(showDone.cat?'up':'down')}),showDone.cat?'Hide completed':'Show '+doneCat.length+' completed'),
+          showDone.cat&&doneCat.map(t=>e(TaskRow,{key:t.id,task:t,showCat:false,projects,onToggle:toggleTask,onDelete:deleteTask}))
+        )
+      ),
+      e('div',{className:'section-header',style:{marginBottom:10}},'Projects'),
+      addingProj&&e('div',{className:'proj-add-row'},
+        e('input',{className:'proj-add-input',autoFocus:true,value:projName,placeholder:'Project name...',onChange:ev=>setProjName(ev.target.value),onKeyDown:ev=>{if(ev.key==='Enter')saveProj();if(ev.key==='Escape'){setAddingProj(false);setProjName('');}}}),
+        e('button',{className:'btn-add',style:{background:tc.bg,borderColor:tc.accent,color:tc.text},onClick:saveProj},'Add'),
+        e('button',{className:'btn-cancel',onClick:()=>{setAddingProj(false);setProjName('')}},'Cancel')
+      ),
+      catProjs.length===0&&!addingProj&&e('div',{className:'empty'},'No projects yet.'),
+      catProjs.map(proj=>{
+        const pt=allCatTasks.filter(t=>t.projectId===proj.id);
+        const opt=pt.filter(t=>!t.done);const dpt=pt.filter(t=>t.done);
+        const isExp=projExpanded[proj.id];const dk='proj_'+proj.id;
+        return e('div',{key:proj.id,className:'proj-card'},
+          e('div',{className:'proj-header',onClick:()=>setProjExpanded(p=>({...p,[proj.id]:!isExp}))},
+            e('div',{style:{display:'flex',alignItems:'center'}},e('div',{className:'proj-dot',style:{background:tc.accent}}),e('span',{className:'proj-name'},proj.name)),
+            e('div',{className:'proj-meta'},opt.length>0&&e('span',{className:'proj-count'},opt.length+' open'),opt.filter(t=>t.priority==='high').length>0&&e('span',{className:'proj-high'},opt.filter(t=>t.priority==='high').length+' high'),e('i',{className:'ti ti-chevron-'+(isExp?'up':'down'),style:{fontSize:13,color:'var(--text-tertiary)'}}))
+          ),
+          isExp&&e('div',{className:'proj-body'},
+            pt.length===0&&addingTask!==proj.id&&e('div',{className:'empty',style:{padding:'4px 0 6px'}},'No tasks yet.'),
+            opt.map(t=>e(TaskRow,{key:t.id,task:t,showCat:false,projects,onToggle:toggleTask,onDelete:deleteTask})),
+            addingTask===proj.id&&e(InlineForm,{catId,form,setForm,onSave:()=>saveTask(catId,proj.id),onCancel:()=>{setAddingTask(null);setForm(EF);}}),
+            dpt.length>0&&e('div',null,
+              e('div',{className:'completed-toggle',onClick:()=>setShowDone(s=>({...s,[dk]:!s[dk]}))},e('i',{className:'ti ti-chevron-'+(showDone[dk]?'up':'down')}),showDone[dk]?'Hide completed':'Show '+dpt.length+' completed'),
+              showDone[dk]&&dpt.map(t=>e(TaskRow,{key:t.id,task:t,showCat:false,projects,onToggle:toggleTask,onDelete:deleteTask}))
+            ),
+            addingTask!==proj.id&&e('button',{className:'add-task-btn',style:{background:tc.bg,borderColor:tc.accent,color:tc.text},onClick:()=>{setAddingTask(proj.id);setForm(EF);}},e('i',{className:'ti ti-plus',style:{fontSize:11}}),' Add task')
+          )
+        );
+      })
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(e(App));
+</script>
+</body>
+</html>
