@@ -191,6 +191,12 @@ async function apiCreateTask(task){
 async function apiUpdateTask(id,fields){
   try{const res=await fetch('/.netlify/functions/tasks',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,fields})});return res.ok;}catch{return false;}
 }
+async function fetchProjects(){
+  try{const res=await fetch('/.netlify/functions/projects');if(!res.ok)return null;const p=await res.json();return (p&&typeof p==='object')?p:null;}catch{return null;}
+}
+async function saveProjects(projects){
+  try{const res=await fetch('/.netlify/functions/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(projects)});return res.ok;}catch{return false;}
+}
 async function apiDeleteTask(id){
   try{const res=await fetch('/.netlify/functions/tasks',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});return res.ok;}catch{return false;}
 }
@@ -394,8 +400,8 @@ function Sidebar({view,setView,setCatId,tasks,slackCount}){
 function App(){
   const [view,setView]=useState('overview');
   const [catId,setCatId]=useState(null);
-  const [projects,setProjRaw]=useState(()=>S.get('matte_projects')||SEED_PROJECTS);
-  const [tasks,setTasksRaw]=useState(SEED_TASKS);
+  const [projects,setProjRaw]=useState(SEED_PROJECTS);
+  const [tasks,setTasksRaw]=useState([]);
   const [tasksReady,setTasksReady]=useState(false);
   const [syncMsg,setSyncMsg]=useState(null);
   const [slackMsgs,setSlackMsgs]=useState(SEED_SLACK.map(m=>({...m,dismissed:false})));
@@ -411,20 +417,24 @@ function App(){
   const [showDone,setShowDone]=useState({});
   const [allMode,setAllMode]=useState('all');
 
-  const setProjects=p=>{setProjRaw(p);S.set('matte_projects',p);};
+  // Save projects to the shared cloud store (and keep a local copy as fallback)
+  const setProjects=p=>{setProjRaw(p);S.set('matte_projects',p);saveProjects(p);};
 
-  // Load tasks from Netlify Blobs on mount — shared across all users
+  // Load projects from the shared store
+  const loadProjects=useCallback(async()=>{
+    const remote=await fetchProjects();
+    if(remote&&typeof remote==='object'&&Object.keys(remote).length>0){
+      setProjRaw(remote);
+      S.set('matte_projects',remote);
+    }
+  },[]);
+
+  // Load tasks from Netlify Blobs on mount — shared across all users.
+  // NEVER auto-seeds: we only ever render exactly what the store returns.
   const loadTasks=useCallback(async()=>{
     const remote=await fetchTasks();
-    if(remote&&remote.length>0){
+    if(Array.isArray(remote)){
       setTasksRaw(remote);
-    } else if(remote&&remote.length===0){
-      // Blobs empty — seed all tasks
-      setSyncMsg('Seeding tasks...');
-      for(const t of SEED_TASKS){await apiCreateTask({...t,created:Date.now()});}
-      const seeded=await fetchTasks();
-      if(seeded)setTasksRaw(seeded);
-      setSyncMsg(null);
     }
     setTasksReady(true);
   },[]);
@@ -469,7 +479,21 @@ function App(){
     setSlackLoading(false);
   },[]);
 
-  useEffect(()=>{loadTasks();loadCalendar();loadSlack();},[]);
+  useEffect(()=>{loadTasks();loadProjects();loadCalendar();loadSlack();},[]);
+
+  // Auto-refresh tasks and projects so Max and Alexa see each other's changes
+  // without manual reloads. Runs every 30s and whenever the tab regains focus.
+  useEffect(()=>{
+    const refresh=async()=>{
+      const [t,p]=await Promise.all([fetchTasks(),fetchProjects()]);
+      if(Array.isArray(t))setTasksRaw(t);
+      if(p&&typeof p==='object'&&Object.keys(p).length>0)setProjRaw(p);
+    };
+    const interval=setInterval(refresh,30000);
+    const onFocus=()=>refresh();
+    window.addEventListener('focus',onFocus);
+    return ()=>{clearInterval(interval);window.removeEventListener('focus',onFocus);};
+  },[]);
 
   const dismissSlack=id=>{
     const msg=slackMsgs.find(m=>m.id===id);
